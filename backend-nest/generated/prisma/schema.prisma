@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  username  String     @unique @map("name")
+  email     String     @unique
+  password  String
+  orders    Order[]
+  cartItems CartItem[]
+}
+
+model Food {
+  id          Int         @id @default(autoincrement())
+  name        String
+  description String?
+  price       Decimal
+  imageUrl    String?
+  category    String?
+  cartItems   CartItem[]
+  OrderItem   OrderItem[]
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  userId      Int
+  user        User        @relation(fields: [userId], references: [id])
+  orderDate   DateTime    @default(now())
+  totalAmount Decimal
+  orderItems  OrderItem[]
+}
+
+model OrderItem {
+  id       Int     @id @default(autoincrement())
+  orderId  Int
+  order    Order   @relation(fields: [orderId], references: [id])
+  foodId   Int
+  food     Food    @relation(fields: [foodId], references: [id])
+  quantity Int
+  price    Decimal
+}
+
+model CartItem {
+  id       Int  @id @default(autoincrement())
+  userId   Int
+  user     User @relation(fields: [userId], references: [id])
+  foodId   Int
+  food     Food @relation(fields: [foodId], references: [id])
+  quantity Int
+}
