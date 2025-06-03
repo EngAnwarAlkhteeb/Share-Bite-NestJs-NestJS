@@ -6,7 +6,7 @@ import Link from "next/link"; // For client-side transitions
 import { usePathname } from "next/navigation"; // To get the current path for active link
 
 // Assuming assets.ts contains your image imports
-import { assets } from "@/assets/assets";
+import { assets } from "../../assets/assets";
 import { SlBasketLoaded } from "react-icons/sl";
 
 // Define the type for navLinks
