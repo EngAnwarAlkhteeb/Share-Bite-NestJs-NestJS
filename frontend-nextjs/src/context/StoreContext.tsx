@@ -5,7 +5,7 @@ import React, { createContext, useEffect, useState, ReactNode } from "react";
 // import axios from "axios"; // axios is commented out as per your previous instruction
 
 // Import FoodItemType and the static food_list from assets.ts
-import { food_list as static_food_list, FoodItemType as AssetFoodItemType } from "@/assets/assets";
+import { food_list as static_food_list, FoodItemType as AssetFoodItemType } from "../assets/assets";
 import type { StaticImageData } from 'next/image'; // Import for image type
 
 // Refine FoodItemType for context if it's not exactly the same as in assets.ts
