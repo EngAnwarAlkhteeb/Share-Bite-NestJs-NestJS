@@ -2,7 +2,7 @@
 
 import React, { useContext } from "react";
 import Image from "next/image";
-import type { StaticImageData } from 'next/image'; // Import StaticImageData type
+import type { StaticImageData } from 'next/image';
 import { assets } from "@/assets/assets";
 import { StoreContext } from "@/context/StoreContext";
 import img1 from '@/assets/food_1.png'
@@ -13,9 +13,7 @@ interface FoodItemProps {
   name: string;
   price: number;
   description: string;
-  // --- CHANGE 1: Update image prop type ---
-  image: string | StaticImageData; // 
-  // --- END CHANGE 1 ---
+  image: string | StaticImageData;
 }
 
 const FoodItem: React.FC<FoodItemProps> = ({
@@ -25,62 +23,42 @@ const FoodItem: React.FC<FoodItemProps> = ({
   description,
   image,
 }) => {
-  // --- CHANGE 2: Remove 'url' from useContext destructuring as it's no longer needed for local images ---
   const { cartItems, addToCart, removeFromCart } = useContext(StoreContext)!;
-  // --- END CHANGE 2 ---
 
   return (
-    <div className="w-full m-auto rounded-xl shadow-[0px_0px_15px_rgba(0,0,0,0.08)] transition-all duration-300 animate-fadeIn h-full hover:rotate-1">
-      <div className="relative">
-        <Image
-          className="h-[150px] object-cover rounded-t-xl w-[150px]"
-          src={img1}
-          alt={name} 
-        />
-        {!cartItems[id] ? (
-          <Image
-            className="absolute bottom-4 right-4 w-[35px] cursor-pointer rounded-full"
-            onClick={() => addToCart(id)}
-            src={img2}
-            alt="Add to cart"
-            width={35}
-            height={35}
-          />
-        ) : (
-          <div className="absolute bottom-4 right-4 flex items-center p-1 gap-2 rounded-full bg-white">
+    <div className="relative flex flex-col items-center">
+      {/* Diamond/Pyramid container */}
+      <div className="relative w-64 h-64 mb-2">
+        {/* Diamond border */}
+        <div className="absolute inset-0 rotate-45 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-lg border border-yellow-500/30 backdrop-blur-sm" />
+        
+        {/* Inner diamond for image */}
+        <div className="absolute inset-4 rotate-45 rounded-lg overflow-hidden bg-slate-800 border border-slate-700">
+          <div className="w-full h-full -rotate-45 scale-150 origin-center">
             <Image
-              onClick={() => removeFromCart(id)}
-              src={assets.remove_icon_red}
-              alt="Remove from cart"
-              className="w-[30px] cursor-pointer"
-              width={30}
-              height={30}
+              className="w-full h-full object-cover"
+              src={img1}
+              alt={name}
             />
-            <p className="text-gray-700">{cartItems[id]}</p>
-            <Image
-              onClick={() => addToCart(id)}
-              src={assets.add_icon_green}
-              alt="Add more"
-              className="w-[30px] cursor-pointer"
-              width={30}
-              height={30}
-            />
+            {/* Overlay gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
           </div>
-        )}
-      </div>
-      <div className="p-5">
-        <div className="flex justify-between items-center mb-2.5">
-          <p className="text-xl font-medium">{name}</p>
-          <Image
-            src={assets.play_store}
-            alt="Rating"
-            className="w-[70px]"
-            width={70}
-            height={15} // Adjust height as needed based on aspect ratio of your image
-          />
         </div>
-        <p className="text-gray-600 text-xs">{description}</p>
-        <p className="text-tomato text-2xl font-medium my-2.5">Rp. {price}</p>
+        
+        {/* Price tag */}
+        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white rounded-lg px-4 py-2 shadow-lg border border-gray-200">
+          <span className="text-slate-800 font-bold text-lg">Rp. {price}</span>
+        </div>
+      </div>
+
+      {/* Food info - closer to diamond */}
+      <div className="text-center space-y-1 max-w-xs mt-4">
+        <h3 className="text-white text-xl md:text-2xl font-bold font-serif">
+          {name}
+        </h3>
+        <p className="text-gray-400 text-sm leading-relaxed">
+          {description}
+        </p>
       </div>
     </div>
   );
