@@ -1,9 +1,10 @@
 // src/components/OrderList.jsx
-import React from 'react';
-import { useQuery, gql } from '@apollo/client';
+import React, { useState, useEffect } from 'react';
+import { fetchGraphQL } from '@/lib/fetchGraphQL';
+import { print } from 'graphql';
+import { gql } from 'graphql-tag';
 
 // Define the GraphQL query to fetch all orders
-// IMPORTANT: Use 'orders' (plural) as per our fix
 const GET_ALL_ORDERS_QUERY = gql`
   query GetAllOrders {
     orders { 
@@ -13,7 +14,7 @@ const GET_ALL_ORDERS_QUERY = gql`
       price
       totalAmount
       
-      user { # Request nested user data
+      user {
         id
         username
         email
@@ -23,12 +24,11 @@ const GET_ALL_ORDERS_QUERY = gql`
         id
         quantity
         price
-        food { # Request nested food details for each item
+        food {
           id
           name
           price
           description
-          # Add other fields you want from the Food entity
         }
       }
     }
@@ -36,36 +36,89 @@ const GET_ALL_ORDERS_QUERY = gql`
 `;
 
 function OrderList() {
-    // useQuery returns loading, error, and data states
-    const { loading, error, data } = useQuery(GET_ALL_ORDERS_QUERY);
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    if (loading) return <p>Loading orders...</p>;
-    if (error) return <p>Error loading orders: {error.message}</p>;
-    if (!data || !data.orders || data.orders.length === 0) return <p>No orders found.</p>;
+    useEffect(() => {
+        const fetchOrders = async () => {
+            try {
+                setLoading(true);
+                const response = await fetchGraphQL(print(GET_ALL_ORDERS_QUERY), {});
+
+                if (response.data && response.data.orders) {
+                    setOrders(response.data.orders);
+                } else {
+                    setOrders([]);
+                }
+            } catch (err) {
+                console.error('Error fetching orders:', err);
+                setError(err.message || 'Failed to fetch orders');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchOrders();
+    }, []);
+
+    if (loading) return <p className="text-center py-8">Loading orders...</p>;
+    if (error) return <p className="text-center py-8 text-red-600">Error loading orders: {error}</p>;
+    if (!orders || orders.length === 0) return <p className="text-center py-8 text-gray-600">No orders found.</p>;
 
     return (
-        <div>
-            <h2>All Orders</h2>
-            {data.orders.map((order) => (
-                <div key={order.id} style={{ border: '1px solid #ccc', margin: '10px', padding: '10px' }}>
-                    <h3>Order ID: {order.id}</h3>
-                    <p>Ordered by: {order.user ? `${order.user.username} (${order.user.email})` : 'N/A'}</p>
-                    <p>Date: {new Date(order.orderDate).toLocaleString()}</p>
-                    <p>Total Price: ${order.totalAmount}</p> {/* Use totalAmount from your DB */}
-                    <p>Order-level Price: ${order.price}</p> {/* If you distinguish between total and order-level price */}
+        <div className="max-w-6xl mx-auto p-6">
+            <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">All Orders</h2>
+            <div className="space-y-6">
+                {orders.map((order) => (
+                    <div key={order.id} className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow duration-200">
+                        <div className="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 className="text-xl font-semibold text-gray-800">Order #{order.id}</h3>
+                                <p className="text-gray-600">
+                                    Ordered by: {order.user ? `${order.user.username} (${order.user.email})` : 'N/A'}
+                                </p>
+                                <p className="text-gray-500 text-sm">
+                                    Date: {new Date(order.orderDate).toLocaleString()}
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-2xl font-bold text-green-600">${order.totalAmount || order.price}</p>
+                                <p className="text-sm text-gray-500">Total Amount</p>
+                            </div>
+                        </div>
 
-                    <h4>Items:</h4>
-                    <ul>
-                        {order.orderItems.map((item) => (
-                            <li key={item.id}>
-                                {item.food ? item.food.name : 'Unknown Food'} - Qty: {item.quantity} - Item Price: ${item.price}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            ))}
+                        <div className="border-t border-gray-200 pt-4">
+                            <h4 className="text-lg font-semibold text-gray-800 mb-3">Order Items:</h4>
+                            <div className="space-y-2">
+                                {order.orderItems && order.orderItems.length > 0 ? (
+                                    order.orderItems.map((item) => (
+                                        <div key={item.id} className="flex justify-between items-center bg-gray-50 rounded-lg p-3">
+                                            <div>
+                                                <span className="font-medium text-gray-800">
+                                                    {item.food ? item.food.name : 'Unknown Food'}
+                                                </span>
+                                                {item.food && item.food.description && (
+                                                    <p className="text-sm text-gray-600">{item.food.description}</p>
+                                                )}
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="font-semibold text-gray-800">Qty: {item.quantity}</p>
+                                                <p className="text-sm text-gray-600">${item.price} each</p>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-gray-500 italic">No items found for this order</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }
 
 export default OrderList;
+
