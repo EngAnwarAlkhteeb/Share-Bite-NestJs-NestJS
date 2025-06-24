@@ -1,13 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link"; // For client-side transitions
-import { usePathname } from "next/navigation"; // To get the current path for active link
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 // Assuming assets.ts contains your image imports
 import { assets } from "../../assets/assets";
-import { SlBasketLoaded } from "react-icons/sl";
+import { getSession } from "@/lib/session";
+import SignInPanel from "../signInPanel";
+import Profile from "../Profile";
+import img from '../../assets/cart-3d-icon.png'
 
 // Define the type for navLinks
 interface NavLinks {
@@ -26,102 +29,216 @@ function capitalize(word: string): string {
   return words.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 
-const Navbar: React.FC = () => {
-  const [activeMenu, setActiveMenu] = useState<string>("home"); // State to manage active menu item
-  const pathname = usePathname(); // Get current pathname from Next.js
+type Props = {};
+
+const Navbar = (props: Props) => {
+  const [session, setSession] = useState<any>(null);
+  const [activeMenu, setActiveMenu] = useState<string>("home");
+  const [cartItemCount, setCartItemCount] = useState<number>(0);
+  const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  React.useEffect(() => {
+  // Get session on component mount
+  useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        const sessionData = await getSession();
+        setSession(sessionData);
+      } catch (error) {
+        console.error("Error fetching session:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSession();
+  }, []);
+
+  // Set active menu based on pathname
+  useEffect(() => {
     if (pathname === "/") {
       setActiveMenu("home");
     }
   }, [pathname]);
 
+  // Optional: Add scroll behavior for navbar visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
+  // Load cart items count from localStorage or API
+  useEffect(() => {
+    const loadCartCount = () => {
+      if (typeof window !== 'undefined') {
+        const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+        setCartItemCount(cartItems.length);
+      }
+    };
+
+    loadCartCount();
+    
+    // Listen for cart updates
+    const handleCartUpdate = () => loadCartCount();
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    
+    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-between items-center px-4 sm:px-6 md:px-8 py-4 sticky top-0 bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 z-50 shadow-2xl backdrop-blur-md w-full max-w-full border-b border-purple-500/20">
+        <div className="w-[150px] h-8 bg-gray-700 animate-pulse rounded-lg"></div>
+        <div className="flex gap-4">
+          <div className="w-20 h-6 bg-gray-700 animate-pulse rounded-lg"></div>
+          <div className="w-20 h-6 bg-gray-700 animate-pulse rounded-lg"></div>
+          <div className="w-20 h-6 bg-gray-700 animate-pulse rounded-lg"></div>
+        </div>
+        <div className="w-24 h-8 bg-gray-700 animate-pulse rounded-lg"></div>
+      </div>
+    );
+  }
+
   return (
     <div
-      className="flex justify-between items-center px-4 sm:px-6 md:px-8 py-4 sticky top-0 bg-[#101828] 
-     z-50 shadow-lg backdrop-blur-md w-full max-w-full"
+      className={`flex justify-between items-center px-4 sm:px-6 md:px-8 py-4 sticky top-0 
+      bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 
+      z-50 shadow-2xl backdrop-blur-md w-full max-w-full transition-all duration-300 
+      border-b border-purple-500/20 ${
+        isVisible ? "transform translate-y-0" : "transform -translate-y-full"
+      }`}
     >
-      <Link href="/">
+      <Link href="/" className="transform hover:scale-105 transition-transform duration-200">
         <Image
           src={assets.logo}
-          alt="Logo"
-          className="w-[150px] sm:w-[140px] md:w-[120px] ml-[40px]"
+          alt="ShareBite Logo"
+          className="w-[150px] sm:w-[140px] md:w-[120px] ml-[40px] drop-shadow-lg"
         />
       </Link>
-      <ul className="list-none gap-5 text-white text-lg sm:text-base hidden md:flex">
+
+      <ul className="list-none gap-8 text-white text-lg sm:text-base hidden md:flex">
         {Object.entries(navLinks).map(([menu, link]) => (
           <li
             key={menu}
             onClick={() => setActiveMenu(menu)}
-            className={`cursor-pointer pb-0.5 ${
-              activeMenu === menu
-                ? "border-b-2 text-white border-[white] text-black"
+            className={`cursor-pointer pb-1 transition-all duration-300 hover:text-purple-300 
+            transform hover:scale-110 hover:-translate-y-1 relative group ${
+              activeMenu === menu 
+                ? "text-purple-300 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-purple-400 after:to-pink-400 after:rounded-full" 
                 : ""
             }`}
           >
-            {/* For hash links, use regular <a> tags or a custom scroll-to-section function */}
             {link.startsWith("#") ? (
-              <a href={link}>{capitalize(menu)}</a>
+              <a href={link} className="font-medium tracking-wide">
+                {capitalize(menu)}
+              </a>
             ) : (
-              <Link href={link}>{capitalize(menu)}</Link>
+              <Link href={link} className="font-medium tracking-wide">
+                {capitalize(menu)}
+              </Link>
             )}
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-purple-600/10 to-purple-600/0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
           </li>
         ))}
       </ul>
-      <div className="flex items-center gap-10 sm:gap-7 md:gap-5 mx-[40px]">
+
+      <div className="flex items-center gap-6 sm:gap-5 md:gap-4 mx-[40px]">
+        {/* Enhanced Search Bar with 3D Icon */}
         <div className="group relative max-w-[290px]">
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none"
-          >
-            <path
-              d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"
-              fill="currentColor"
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none">
+            <Image
+              src="/src/assets/search-3d-icon.png"
+              alt="Search"
+              width={20}
+              height={20}
+              className="opacity-70 group-hover:opacity-100 transition-opacity duration-200"
             />
-          </svg>
+          </div>
 
           <input
             id="query"
             type="search"
             name="searchbar"
-            placeholder="Search..."
+            placeholder="Search delicious food..."
             className="
-          w-full h-11 pl-10
-          font-montserrat
-          bg-gray-800 text-gray-300 placeholder:text-gray-500
-          rounded-lg
-          shadow-[0_0_0_1.5px_#2b2c37,0_0_25px_-17px_#000]
-          outline-none
-          transition-all duration-200 ease-out
-          group-hover:shadow-[0_0_0_2.5px_#2f303d,0_0_25px_-15px_#000]
-          focus:shadow-[0_0_0_2.5px_#2f303d]
-          active:scale-95
-        "
+              w-full h-12 pl-11 pr-4
+              font-medium
+              bg-gradient-to-r from-slate-800/80 to-slate-700/80 
+              text-white placeholder:text-gray-400
+              rounded-xl
+              border border-purple-500/30
+              shadow-[0_8px_32px_rgba(139,69,255,0.1)]
+              outline-none
+              transition-all duration-300 ease-out
+              group-hover:shadow-[0_8px_32px_rgba(139,69,255,0.2)]
+              group-hover:border-purple-400/50
+              focus:shadow-[0_8px_32px_rgba(139,69,255,0.3)]
+              focus:border-purple-400
+              focus:bg-gradient-to-r focus:from-slate-700/90 focus:to-slate-600/90
+              active:scale-[0.98]
+              backdrop-blur-sm
+            "
           />
         </div>
-        <div className="relative">
-          <Link href="/cart">
-            <SlBasketLoaded className="w-[24px] sm:w-[22px] md:w-[20px] w-[42px] h-[42px] " />
 
-            {/* <Image
-              src={assets.basket_icon}
-              alt="Basket"
-              className="w-[24px] sm:w-[22px] md:w-[20px]"
-            /> */}
+        {/* Enhanced Cart Icon with 3D Design */}
+        <div className="relative group">
+          <Link href="/cart" className="block transform hover:scale-110 transition-all duration-200">
+            <div className="relative rounded-xl mr-[5px] transition-all duration-200 backdrop-blur-sm"
+            >
+              <Image
+                src={img}
+                alt="Shopping Cart"
+                width={24}
+                height={24}
+                className="filter drop-shadow-lg"
+              />
+              {cartItemCount > 0 && (
+                <div className="absolute -top-2 -right-2 min-w-[20px] min-h-[20px] bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg animate-pulse">
+                  {cartItemCount > 99 ? '99+' : cartItemCount}
+                </div>
+              )}
+            </div>
           </Link>
-          {/* You'll need to pass getTotalCartAmount from a context or prop if it's still used */}
-          {/* For now, assuming getTotalCartAmount() is replaced or handled differently */}
-          {/* <div className={getTotalCartAmount() === 0 ? "" : "absolute min-w-[10px] min-h-[10px] bg-tomato rounded-full top-[-8px] right-[-8px]"}></div> */}
-          <div className="absolute min-w-[10px] min-h-[10px] bg-tomato rounded-full top-[-8px] right-[-8px]"></div>{" "}
-          {/* Placeholder dot */}
+          
+          {/* Tooltip */}
+          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black/80 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+            View Cart ({cartItemCount} items)
+          </div>
         </div>
-        {/* Removed login/logout button and profile dropdown as per request */}
+      </div>
+
+      {/* Enhanced User Profile/Sign In */}
+      <div className="flex items-center">
+        {session && session.user ? (
+          <div className="relative group">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-400/30 hover:border-blue-400/50 transition-all duration-200 backdrop-blur-sm">
+              <Profile user={session.user} />
+            </div>
+          </div>
+        ) : (
+          <div className="transform hover:scale-105 transition-transform duration-200">
+            <SignInPanel />
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
 export default Navbar;
+

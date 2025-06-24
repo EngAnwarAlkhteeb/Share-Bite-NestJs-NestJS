@@ -1,15 +1,27 @@
 "use client"; // This page uses client-side state (useState)
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar/Navbar"; // Assuming Navbar is in components
 import Header from "@/components/Header/Header"; // Assuming Header is in components
 import ExploreMenu from "@/components/ExploreMenu/ExploreMenu"; // Assuming ExploreMenu is in components
 import FoodDisplay from "@/components/FoodDisplay/FoodDisplay"; // Assuming FoodDisplay is in components
 import AppDownload from "@/components/AppDownload/AppDownload"; // Assuming AppDownload is in components
 import Footer from "@/components/Footer/Footer"; // Assuming Footer is in components
+import { getSession, Session } from "@/lib/session";
+import OrderList from "@/components/OrderList"; // Assuming OrderList is in components
 
 export default function Home() {
   const [category, setCategory] = useState("All");
+  const [session, setSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    async function fetchSession() {
+      const sessionData = await getSession();
+      setSession(sessionData);
+    }
+
+    fetchSession();
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -19,6 +31,7 @@ export default function Home() {
         {" "}
         {/* Use main tag for primary content */}
         <ExploreMenu category={category} setCategory={setCategory} />
+        <OrderList />
         <FoodDisplay category={category} />
         <AppDownload />
       </main>
