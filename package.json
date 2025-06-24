@@ -1,0 +1,33 @@
+{
+  "name": "share-bite",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EngAnwarAlkhteeb/Share-Bite-NestJs-NestJS.git"
+  },
+  "packageManager": "npm@10.8.1",
+  "workspaces": [
+    "apps/*"
+  ],
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/EngAnwarAlkhteeb/Share-Bite-NestJs-NestJS/issues"
+  },
+  "homepage": "https://github.com/EngAnwarAlkhteeb/Share-Bite-NestJs-NestJS#readme",
+  "devDependencies": {
+    "turbo": "^2.5.4"
+  },
+  "dependencies": {
+    "graphql-type-decimal": "^1.0.0"
+  }
+}

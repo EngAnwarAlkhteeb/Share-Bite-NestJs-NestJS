@@ -10,7 +10,7 @@ import { assets } from "../../assets/assets";
 import { getSession } from "@/lib/session";
 import SignInPanel from "../signInPanel";
 import Profile from "../Profile";
-import img from '../../assets/cart-3d-icon.png'
+import img from "../../assets/cart-3d-icon.png";
 
 // Define the type for navLinks
 interface NavLinks {
@@ -84,19 +84,19 @@ const Navbar = (props: Props) => {
   // Load cart items count from localStorage or API
   useEffect(() => {
     const loadCartCount = () => {
-      if (typeof window !== 'undefined') {
-        const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+      if (typeof window !== "undefined") {
+        const cartItems = JSON.parse(localStorage.getItem("cartItems") || "[]");
         setCartItemCount(cartItems.length);
       }
     };
 
     loadCartCount();
-    
+
     // Listen for cart updates
     const handleCartUpdate = () => loadCartCount();
-    window.addEventListener('cartUpdated', handleCartUpdate);
-    
-    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
+    window.addEventListener("cartUpdated", handleCartUpdate);
+
+    return () => window.removeEventListener("cartUpdated", handleCartUpdate);
   }, []);
 
   if (loading) {
@@ -122,7 +122,10 @@ const Navbar = (props: Props) => {
         isVisible ? "transform translate-y-0" : "transform -translate-y-full"
       }`}
     >
-      <Link href="/" className="transform hover:scale-105 transition-transform duration-200">
+      <Link
+        href="/"
+        className="transform hover:scale-105 transition-transform duration-200"
+      >
         <Image
           src={assets.logo}
           alt="ShareBite Logo"
@@ -137,8 +140,8 @@ const Navbar = (props: Props) => {
             onClick={() => setActiveMenu(menu)}
             className={`cursor-pointer pb-1 transition-all duration-300 hover:text-purple-300 
             transform hover:scale-110 hover:-translate-y-1 relative group ${
-              activeMenu === menu 
-                ? "text-purple-300 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-purple-400 after:to-pink-400 after:rounded-full" 
+              activeMenu === menu
+                ? "text-purple-300 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-purple-400 after:to-pink-400 after:rounded-full"
                 : ""
             }`}
           >
@@ -197,9 +200,11 @@ const Navbar = (props: Props) => {
 
         {/* Enhanced Cart Icon with 3D Design */}
         <div className="relative group">
-          <Link href="/cart" className="block transform hover:scale-110 transition-all duration-200">
-            <div className="relative rounded-xl mr-[5px] transition-all duration-200 backdrop-blur-sm"
-            >
+          <Link
+            href="/cart"
+            className="block transform hover:scale-110 transition-all duration-200"
+          >
+            <div className="relative rounded-xl mr-[5px] transition-all duration-200 backdrop-blur-sm">
               <Image
                 src={img}
                 alt="Shopping Cart"
@@ -209,12 +214,12 @@ const Navbar = (props: Props) => {
               />
               {cartItemCount > 0 && (
                 <div className="absolute -top-2 -right-2 min-w-[20px] min-h-[20px] bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg animate-pulse">
-                  {cartItemCount > 99 ? '99+' : cartItemCount}
+                  {cartItemCount > 99 ? "99+" : cartItemCount}
                 </div>
               )}
             </div>
           </Link>
-          
+
           {/* Tooltip */}
           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black/80 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
             View Cart ({cartItemCount} items)
@@ -236,9 +241,14 @@ const Navbar = (props: Props) => {
           </div>
         )}
       </div>
+
+      {session && session.user ? (
+        <Profile user={session.user} />
+      ) : (
+        <SignInPanel />
+      )}
     </div>
   );
 };
 
 export default Navbar;
-

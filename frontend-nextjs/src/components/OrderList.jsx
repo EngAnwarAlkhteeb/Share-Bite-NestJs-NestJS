@@ -45,7 +45,7 @@ function OrderList() {
             try {
                 setLoading(true);
                 const response = await fetchGraphQL(print(GET_ALL_ORDERS_QUERY), {});
-                
+
                 if (response.data && response.data.orders) {
                     setOrders(response.data.orders);
                 } else {
