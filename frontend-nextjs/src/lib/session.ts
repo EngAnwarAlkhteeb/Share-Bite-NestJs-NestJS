@@ -1,13 +1,13 @@
-'use server';
+"use server";
 
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-
 export type SessionUser = {
   id?: string;
-  name?: string;
+  username?: string;
+  avatar?: string;
 };
 
 export type Session = {
@@ -28,7 +28,7 @@ export async function createSession(payload: Session) {
   const expiredAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
   (await cookies()).set("session", session, {
-    httpOnly: true, 
+    httpOnly: true,
     secure: true,
     expires: expiredAt,
     sameSite: "lax",
